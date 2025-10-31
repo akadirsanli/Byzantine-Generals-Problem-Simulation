@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Byzantine Generals Problem Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1, h2, h3 {
+            color: #333;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .config-panel, .simulation-panel, .results-panel {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .config-panel {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .simulation-panel {
+            flex: 2;
+            min-width: 500px;
+        }
+        
+        .results-panel {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select, button {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .general {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 80px;
+            color: white;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .commander {
+            background-color: #3498db;
+        }
+        
+        .loyal {
+            background-color: #2ecc71;
+        }
+        
+        .traitor {
+            background-color: #e74c3c;
+        }
+        
+        .message {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #f39c12;
+            color: white;
+            line-height: 30px;
+            font-size: 12px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .log-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-top: 20px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        
+        .failure {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .round-indicator {
+            font-weight: bold;
+            margin: 10px 0;
+            text-align: center;
+            background-color: #3498db;
+            color: white;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .message-path {
+            stroke: #f39c12;
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 5,5;
+            animation: dash 2s linear infinite;
+        }
+        
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -10;
+            }
+        }
+        
+        .simulation-area {
+            position: relative;
+            height: 400px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            margin-top: 20px;
+        }
+        
+        .general-container {
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <h1>Byzantine Generals Problem Simulation</h1>
+    
+    <div class="container">
+        <div class="config-panel">
+            <h2>Configuration</h2>
+            
+            <div class="form-group">
+                <label for="numGenerals">Number of Generals:</label>
+                <input type="number" id="numGenerals" min="3" max="10" value="4">
+            </div>
+            
+            <div class="form-group">
+                <label for="numTraitors">Number of Traitors:</label>
+                <input type="number" id="numTraitors" min="1" max="3" value="1">
+            </div>
+            
+            <div class="form-group">
+                <label for="messageType">Message Type:</label>
+                <select id="messageType">
+                    <option value="oral">Oral Messages</option>
+                    <option value="signed">Signed Messages</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="commanderOrder">Commander's Order:</label>
+                <select id="commanderOrder">
+                    <option value="ATTACK">ATTACK</option>
+                    <option value="RETREAT">RETREAT</option>
+                </select>
+            </div>
+            
+            <button id="setupSimulation">Setup Simulation</button>
+            <button id="runSimulation">Run Simulation</button>
+            <button id="resetSimulation">Reset Simulation</button>
+        </div>
+        
+        <div class="simulation-panel">
+            <h2>Simulation</h2>
+            <div id="roundIndicator" class="round-indicator">Setup Complete</div>
+            <div class="simulation-area" id="simulationArea">
+                <!-- Generals and messages will be dynamically added here -->
+            </div>
+        </div>
+        
+        <div class="results-panel">
+            <h2>Results</h2>
+            <div id="consensusResult"></div>
+            <div class="log-container" id="logContainer">
+                <!-- Log entries will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ByzantineGeneralsSimulation {
+            constructor() {
+                this.generals = [];
+                this.traitors = [];
+                this.round = 0;
+                this.messageType = 'oral';
+                this.commanderOrder = 'ATTACK';
+                this.logEntries = [];
+                this.isRunning = false;
+                
+                this.setupEventListeners();
+            }
+            
+            setupEventListeners() {
+                document.getElementById('setupSimulation').addEventListener('click', () => this.setupSimulation());
+                document.getElementById('runSimulation').addEventListener('click', () => this.runSimulation());
+                document.getElementById('resetSimulation').addEventListener('click', () => this.resetSimulation());
+            }
+            
+            setupSimulation() {
+                this.resetSimulation();
+                
+                const numGenerals = parseInt(document.getElementById('numGenerals').value);
+                const numTraitors = parseInt(document.getElementById('numTraitors').value);
+                this.messageType = document.getElementById('messageType').value;
+                this.commanderOrder = document.getElementById('commanderOrder').value;
+                
+                if (numTraitors >= numGenerals) {
+                    alert('Number of traitors must be less than total generals!');
+                    return;
+                }
+                
+                if (this.messageType === 'oral' && numGenerals <= 3 * numTraitors) {
+                    alert('For oral messages, n > 3m is required for consensus!');
+                    return;
+                }
+                
+                this.createGenerals(numGenerals, numTraitors);
+                this.renderGenerals();
+                this.addLogEntry('Simulation setup complete with ' + numGenerals + ' generals, ' + numTraitors + ' traitors.');
+                this.updateRoundIndicator('Setup Complete');
+            }
+            
+            createGenerals(totalGenerals, numTraitors) {
+                this.generals = [];
+                this.traitors = [];
+                
+                for (let i = 0; i < totalGenerals; i++) {
+                    this.generals.push({
+                        id: i,
+                        isCommander: i === 0,
+                        isLoyal: true,
+                        receivedOrders: [],
+                        finalDecision: null
+                    });
+                }
+                
+                for (let i = 0; i < numTraitors; i++) {
+                    let traitorIndex;
+                    do {
+                        traitorIndex = Math.floor(Math.random() * totalGenerals);
+                    } while (traitorIndex === 0 || this.generals[traitorIndex].isLoyal === false);
+                    
+                    this.generals[traitorIndex].isLoyal = false;
+                    this.traitors.push(traitorIndex);
+                }
+                
+                this.addLogEntry('Traitors assigned: ' + this.traitors.map(t => 'General ' + t).join(', '));
+            }
+            
+            renderGenerals() {
+                const simulationArea = document.getElementById('simulationArea');
+                simulationArea.innerHTML = '';
+                
+                const centerX = simulationArea.offsetWidth / 2;
+                const centerY = simulationArea.offsetHeight / 2;
+                const radius = Math.min(centerX, centerY) * 0.7;
+                
+                this.generals.forEach((general, index) => {
+                    const angle = (2 * Math.PI * index) / this.generals.length;
+                    const x = centerX + radius * Math.cos(angle);
+                    const y = centerY + radius * Math.sin(angle);
+                    
+                    const generalContainer = document.createElement('div');
+                    generalContainer.className = 'general-container';
+                    generalContainer.style.left = (x - 40) + 'px';
+                    generalContainer.style.top = (y - 40) + 'px';
+                    
+                    const generalElement = document.createElement('div');
+                    generalElement.className = 'general';
+                    generalElement.id = 'general-' + general.id;
+                    
+                    if (general.isCommander) {
+                        generalElement.classList.add('commander');
+                        generalElement.textContent = 'C';
+                    } else if (general.isLoyal) {
+                        generalElement.classList.add('loyal');
+                        generalElement.textContent = 'G' + general.id;
+                    } else {
+                        generalElement.classList.add('traitor');
+                        generalElement.textContent = 'G' + general.id;
+                    }
+                    
+                    generalContainer.appendChild(generalElement);
+                    simulationArea.appendChild(generalContainer);
+                });
+            }
+            
+            runSimulation() {
+                if (this.generals.length === 0) {
+                    alert('Please setup the simulation first!');
+                    return;
+                }
+                
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.round = 0;
+                this.addLogEntry('Starting simulation with ' + this.messageType + ' messages');
+                
+                if (this.messageType === 'oral') {
+                    this.simulateOralMessages();
+                } else {
+                    this.simulateSignedMessages();
+                }
+            }
+            
+            simulateOralMessages() {
+                this.round++;
+                this.updateRoundIndicator('Round ' + this.round + ': Commander sending orders');
+                
+                const commander = this.generals[0];
+                
+                setTimeout(() => {
+                    this.generals.forEach((general, index) => {
+                        if (index === 0) return;
+                        
+                        let order = this.commanderOrder;
+                        
+                        if (!commander.isLoyal) {
+                            order = Math.random() > 0.5 ? 'ATTACK' : 'RETREAT';
+                        }
+                        
+                        this.sendMessage(0, index, order, () => {
+                            general.receivedOrders.push({
+                                from: 0,
+                                order: order,
+                                round: this.round
+                            });
+                        });
+                    });
+                    
+                    setTimeout(() => {
+                        this.round++;
+                        this.updateRoundIndicator('Round ' + this.round + ': Lieutenants exchanging orders');
+                        
+                        let messagesSent = 0;
+                        const totalMessages = (this.generals.length - 1) * (this.generals.length - 2);
+                        
+                        this.generals.forEach((sender, senderIndex) => {
+                            if (senderIndex === 0) return;
+                            
+                            this.generals.forEach((receiver, receiverIndex) => {
+                                if (receiverIndex === 0 || receiverIndex === senderIndex) return;
+                                
+                                let orderToSend = sender.receivedOrders[0] ? sender.receivedOrders[0].order : this.commanderOrder;
+                                
+                                if (!sender.isLoyal) {
+                                    orderToSend = Math.random() > 0.5 ? 'ATTACK' : 'RETREAT';
+                                }
+                                
+                                this.sendMessage(senderIndex, receiverIndex, orderToSend, () => {
+                                    receiver.receivedOrders.push({
+                                        from: senderIndex,
+                                        order: orderToSend,
+                                        round: this.round
+                                    });
+                                    
+                                    messagesSent++;
+                                    
+                                    if (messagesSent === totalMessages) {
+                                        this.finalizeOralSimulation();
+                                    }
+                                });
+                            });
+                        });
+                    }, 2000);
+                }, 1000);
+            }
+            
+            simulateSignedMessages() {
+                this.round++;
+                this.updateRoundIndicator('Round ' + this.round + ': Commander sending signed orders');
+                
+                const commander = this.generals[0];
+                
+                setTimeout(() => {
+                    this.generals.forEach((general, index) => {
+                        if (index === 0) return;
+                        
+                        let order = this.commanderOrder;
+                        
+                        if (!commander.isLoyal) {
+                            order = Math.random() > 0.5 ? 'ATTACK' : 'RETREAT';
+                        }
+                        
+                        this.sendMessage(0, index, order + ':SIGNED', () => {
+                            general.receivedOrders.push({
+                                from: 0,
+                                order: order,
+                                round: this.round,
+                                signed: true,
+                                signatureChain: [0]
+                            });
+                        });
+                    });
+                    
+                    setTimeout(() => {
+                        this.round++;
+                        this.updateRoundIndicator('Round ' + this.round + ': Lieutenants exchanging signed orders');
+                        
+                        let messagesSent = 0;
+                        const totalMessages = (this.generals.length - 1) * (this.generals.length - 2);
+                        
+                        this.generals.forEach((sender, senderIndex) => {
+                            if (senderIndex === 0) return;
+                            
+                            this.generals.forEach((receiver, receiverIndex) => {
+                                if (receiverIndex === 0 || receiverIndex === senderIndex) return;
+                                
+                                const validOrders = sender.receivedOrders.filter(order => order.signed);
+                                
+                                if (validOrders.length > 0) {
+                                    const orderToForward = validOrders[0];
+                                    
+                                    if (sender.isLoyal) {
+                                        this.sendMessage(senderIndex, receiverIndex, 
+                                            orderToForward.order + ':SIGNED:' + orderToForward.signatureChain.join(','), 
+                                            () => {
+                                                receiver.receivedOrders.push({
+                                                    from: senderIndex,
+                                                    order: orderToForward.order,
+                                                    round: this.round,
+                                                    signed: true,
+                                                    signatureChain: [...orderToForward.signatureChain, senderIndex]
+                                                });
+                                                
+                                                messagesSent++;
+                                                
+                                                if (messagesSent === totalMessages) {
+                                                    this.finalizeSignedSimulation();
+                                                }
+                                            });
+                                    } else {
+                                        let fakeOrder = orderToForward.order === 'ATTACK' ? 'RETREAT' : 'ATTACK';
+                                        this.sendMessage(senderIndex, receiverIndex, 
+                                            fakeOrder + ':SIGNED:' + orderToForward.signatureChain.join(','), 
+                                            () => {
+                                                receiver.receivedOrders.push({
+                                                    from: senderIndex,
+                                                    order: fakeOrder,
+                                                    round: this.round,
+                                                    signed: true,
+                                                    signatureChain: [...orderToForward.signatureChain, senderIndex]
+                                                });
+                                                
+                                                messagesSent++;
+                                                
+                                                if (messagesSent === totalMessages) {
+                                                    this.finalizeSignedSimulation();
+                                                }
+                                            });
+                                    }
+                                } else {
+                                    messagesSent++;
+                                    
+                                    if (messagesSent === totalMessages) {
+                                        this.finalizeSignedSimulation();
+                                    }
+                                }
+                            });
+                        });
+                    }, 2000);
+                }, 1000);
+            }
+            
+            finalizeOralSimulation() {
+                setTimeout(() => {
+                    this.addLogEntry('All messages exchanged. Determining consensus...');
+                    
+                    const loyalGenerals = this.generals.filter(g => g.isLoyal && !g.isCommander);
+                    let consensusAchieved = true;
+                    
+                    loyalGenerals.forEach(general => {
+                        const attackCount = general.receivedOrders.filter(order => order.order === 'ATTACK').length;
+                        const retreatCount = general.receivedOrders.filter(order => order.order === 'RETREAT').length;
+                        
+                        general.finalDecision = attackCount > retreatCount ? 'ATTACK' : 'RETREAT';
+                        
+                        this.addLogEntry('General ' + general.id + ' decides: ' + general.finalDecision + 
+                            ' (ATTACK: ' + attackCount + ', RETREAT: ' + retreatCount + ')');
+                    });
+                    
+                    const firstDecision = loyalGenerals[0].finalDecision;
+                    
+                    for (let i = 1; i < loyalGenerals.length; i++) {
+                        if (loyalGenerals[i].finalDecision !== firstDecision) {
+                            consensusAchieved = false;
+                            break;
+                        }
+                    }
+                    
+                    if (consensusAchieved) {
+                        this.addLogEntry('CONSENSUS ACHIEVED: All loyal generals agree on ' + firstDecision, 'success');
+                        
+                        if (this.generals[0].isLoyal && firstDecision !== this.commanderOrder) {
+                            this.addLogEntry('VALIDITY FAILED: Loyal commander ordered ' + this.commanderOrder + 
+                                ' but generals decided ' + firstDecision, 'failure');
+                        } else {
+                            this.addLogEntry('VALIDITY MAINTAINED: Commander order matches consensus', 'success');
+                        }
+                    } else {
+                        this.addLogEntry('CONSENSUS FAILED: Loyal generals disagree on orders', 'failure');
+                    }
+                    
+                    this.isRunning = false;
+                }, 1000);
+            }
+            
+            finalizeSignedSimulation() {
+                setTimeout(() => {
+                    this.addLogEntry('All signed messages exchanged. Determining consensus...');
+                    
+                    const loyalGenerals = this.generals.filter(g => g.isLoyal && !g.isCommander);
+                    let consensusAchieved = true;
+                    
+                    loyalGenerals.forEach(general => {
+                        const validOrders = general.receivedOrders.filter(order => 
+                            order.signed && order.signatureChain && order.signatureChain.length > 0);
+                        
+                        if (validOrders.length > 0) {
+                            const commanderOrders = validOrders.filter(order => order.signatureChain[0] === 0);
+                            
+                            if (commanderOrders.length > 0) {
+                                const attackOrders = commanderOrders.filter(order => order.order === 'ATTACK');
+                                const retreatOrders = commanderOrders.filter(order => order.order === 'RETREAT');
+                                
+                                if (attackOrders.length > 0 && retreatOrders.length > 0) {
+                                    this.addLogEntry('General ' + general.id + ' detected traitor commander! Defaulting to RETREAT');
+                                    general.finalDecision = 'RETREAT';
+                                } else {
+                                    general.finalDecision = commanderOrders[0].order;
+                                    this.addLogEntry('General ' + general.id + ' follows commander order: ' + general.finalDecision);
+                                }
+                            } else {
+                                this.addLogEntry('General ' + general.id + ' has no valid commander orders. Defaulting to RETREAT');
+                                general.finalDecision = 'RETREAT';
+                            }
+                        } else {
+                            this.addLogEntry('General ' + general.id + ' has no valid orders. Defaulting to RETREAT');
+                            general.finalDecision = 'RETREAT';
+                        }
+                    });
+                    
+                    const firstDecision = loyalGenerals[0].finalDecision;
+                    
+                    for (let i = 1; i < loyalGenerals.length; i++) {
+                        if (loyalGenerals[i].finalDecision !== firstDecision) {
+                            consensusAchieved = false;
+                            break;
+                        }
+                    }
+                    
+                    if (consensusAchieved) {
+                        this.addLogEntry('CONSENSUS ACHIEVED: All loyal generals agree on ' + firstDecision, 'success');
+                        
+                        if (this.generals[0].isLoyal && firstDecision !== this.commanderOrder) {
+                            this.addLogEntry('VALIDITY FAILED: Loyal commander ordered ' + this.commanderOrder + 
+                                ' but generals decided ' + firstDecision, 'failure');
+                        } else {
+                            this.addLogEntry('VALIDITY MAINTAINED: Commander order matches consensus', 'success');
+                        }
+                    } else {
+                        this.addLogEntry('CONSENSUS FAILED: Loyal generals disagree on orders', 'failure');
+                    }
+                    
+                    this.isRunning = false;
+                }, 1000);
+            }
+            
+            sendMessage(from, to, message, callback) {
+                const fromElement = document.getElementById('general-' + from);
+                const toElement = document.getElementById('general-' + to);
+                
+                if (!fromElement || !toElement) return;
+                
+                const fromRect = fromElement.getBoundingClientRect();
+                const toRect = toElement.getBoundingClientRect();
+                const simulationArea = document.getElementById('simulationArea');
+                const simulationRect = simulationArea.getBoundingClientRect();
+                
+                const fromX = fromRect.left + fromRect.width/2 - simulationRect.left;
+                const fromY = fromRect.top + fromRect.height/2 - simulationRect.top;
+                const toX = toRect.left + toRect.width/2 - simulationRect.left;
+                const toY = toRect.top + toRect.height/2 - simulationRect.top;
+                
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message';
+                messageElement.textContent = message.includes('ATTACK') ? 'A' : 'R';
+                messageElement.style.left = (fromX - 15) + 'px';
+                messageElement.style.top = (fromY - 15) + 'px';
+                simulationArea.appendChild(messageElement);
+                
+                const svgNS = "http://www.w3.org/2000/svg";
+                const path = document.createElementNS(svgNS, "path");
+                path.setAttribute("d", `M ${fromX} ${fromY} L ${toX} ${toY}`);
+                path.classList.add("message-path");
+                simulationArea.appendChild(path);
+                
+                this.addLogEntry(`General ${from} → General ${to}: ${message}`);
+                
+                setTimeout(() => {
+                    messageElement.style.transition = 'all 1s ease-in-out';
+                    messageElement.style.left = (toX - 15) + 'px';
+                    messageElement.style.top = (toY - 15) + 'px';
+                    
+                    setTimeout(() => {
+                        simulationArea.removeChild(messageElement);
+                        simulationArea.removeChild(path);
+                        callback();
+                    }, 1000);
+                }, 500);
+            }
+            
+            addLogEntry(message, type = '') {
+                const logContainer = document.getElementById('logContainer');
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                
+                if (type === 'success') {
+                    logEntry.classList.add('success');
+                } else if (type === 'failure') {
+                    logEntry.classList.add('failure');
+                }
+                
+                logEntry.textContent = message;
+                logContainer.appendChild(logEntry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+                
+                this.logEntries.push(message);
+            }
+            
+            updateRoundIndicator(text) {
+                document.getElementById('roundIndicator').textContent = text;
+            }
+            
+            resetSimulation() {
+                this.generals = [];
+                this.traitors = [];
+                this.round = 0;
+                this.logEntries = [];
+                this.isRunning = false;
+                
+                document.getElementById('simulationArea').innerHTML = '';
+                document.getElementById('logContainer').innerHTML = '';
+                document.getElementById('consensusResult').innerHTML = '';
+                document.getElementById('roundIndicator').textContent = 'Setup Complete';
+                
+                this.addLogEntry('Simulation reset');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            new ByzantineGeneralsSimulation();
+        });
+    </script>
+</body>
+</html>
