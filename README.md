@@ -1,5 +1,7 @@
 # Byzantine Generals Problem Simulation
 
+https://akadirsanli.github.io/Byzantine-Generals-Problem-Simulation/
+
 A web-based interactive simulation of the Byzantine Generals Problem, demonstrating consensus algorithms in distributed systems with malicious actors.
 
 ## Overview
